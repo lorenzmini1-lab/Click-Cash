@@ -3,150 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Click & Cash Pro</title>
+    <title>Click & Cash - Mastery</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2563eb">
     <style>
         body { -webkit-tap-highlight-color: transparent; user-select: none; }
         .click-animation { animation: pulse 0.1s ease-in-out; }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(0.92); }
-            100% { transform: scale(1); }
-        }
-        .bg-grid { background-image: radial-gradient(#2563eb 0.5px, transparent 0.5px); background-size: 20px 20px; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(0.95); } 100% { transform: scale(1); } }
+        .fury-mode { animation: fury-glow 0.5s infinite alternate; border-color: #ef4444 !important; }
+        @keyframes fury-glow { from { box-shadow: 0 0 10px #ef4444; } to { box-shadow: 0 0 30px #f87171; } }
+        .heart-pulse { animation: heart-beat 1s infinite; }
+        @keyframes heart-beat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+        .hidden { display: none; }
     </style>
 </head>
-<body class="bg-slate-900 text-white flex flex-col items-center justify-between h-screen p-6 font-sans overflow-hidden bg-grid">
+<body id="body" class="bg-slate-900 text-white flex flex-col items-center justify-between h-screen p-6 font-sans overflow-hidden">
 
-    <div class="text-center mt-6">
-        <h1 class="text-xs text-slate-400 uppercase tracking-widest font-bold">Solde Actuel</h1>
-        <div id="balance" class="text-5xl font-black text-yellow-400 mt-1 drop-shadow-md">0</div>
-        <div class="flex items-center justify-center gap-1 mt-1">
-            <span class="text-xl text-green-400 font-bold" id="euro">0.00</span>
+    <div id="reward-modal" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-6 text-center">
+        <div class="bg-slate-800 border-2 border-yellow-500 rounded-3xl p-6 w-full max-w-xs shadow-2xl">
+            <h2 class="text-2xl font-black text-yellow-500 mb-2">NIVEAU SUPÉRIEUR !</h2>
+            <p class="text-slate-300 text-sm mb-6">Choisis ton bonus :</p>
+            <div class="space-y-3">
+                <button onclick="applyBonus('xp')" class="w-full bg-blue-600 p-3 rounded-xl font-bold text-sm">🚀 Boost XP (+20%)</button>
+                <button onclick="applyBonus('click')" class="w-full bg-green-600 p-3 rounded-xl font-bold text-sm">⚡ Force Clic (+0.2)</button>
+                <button onclick="applyBonus('auto')" class="w-full bg-purple-600 p-3 rounded-xl font-bold text-sm">🤖 Auto-Revenu (+2/s)</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="w-full max-w-xs mt-4">
+        <div class="flex justify-between items-end mb-1">
+            <span class="text-2xl font-black text-blue-500">LVL <span id="lvl-display">1</span></span>
+            <span id="fury-timer" class="text-red-500 font-bold hidden uppercase text-xs animate-pulse">FURIE: 10s</span>
+            <span class="text-[10px] text-slate-400 font-bold uppercase">XP: <span id="xp-current">0</span> / <span id="xp-needed">120</span></span>
+        </div>
+        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden border border-slate-700">
+            <div id="xp-bar" class="bg-blue-500 h-full w-0 transition-all duration-300"></div>
+        </div>
+    </div>
+
+    <div class="text-center">
+        <div id="balance" class="text-6xl font-black text-yellow-400 drop-shadow-md">0</div>
+        <div class="flex items-center justify-center gap-1">
+            <span class="text-2xl text-green-400 font-bold" id="euro">0.00</span>
             <span class="text-green-500 font-bold">€</span>
         </div>
     </div>
 
     <div class="relative">
-        <div id="glow" class="absolute inset-0 bg-blue-600 rounded-full blur-3xl opacity-20 scale-150 animate-pulse"></div>
-        <button onclick="mine(this)" id="mainBtn" class="relative bg-gradient-to-br from-blue-500 to-blue-700 w-48 h-48 rounded-full shadow-2xl flex items-center justify-center border-[8px] border-blue-400/30 active:border-blue-300 transition-all">
-            <span class="text-6xl">💰</span>
-        </button>
+        <button onclick="activateFury()" id="heart-bonus" class="absolute -top-10 -right-10 text-4xl heart-pulse z-10 p-2">❤️</button>
+        <button onclick="mine(this)" id="main-btn" class="relative active:scale-95 transition-transform bg-gradient-to-br from-slate-700 to-slate-900 w-44 h-44 rounded-full border-8 border-slate-800 flex items-center justify-center shadow-2xl text-6xl">💰</button>
     </div>
 
     <div class="w-full max-w-xs space-y-3">
-        <h2 class="text-xs font-bold text-slate-500 uppercase px-2">Boutique d'améliorations</h2>
-        
-        <div class="bg-slate-800/80 backdrop-blur-sm p-3 rounded-xl border border-slate-700 flex justify-between items-center">
-            <div>
-                <p class="text-[10px] text-blue-400 font-bold uppercase">Force du Clic</p>
-                <p class="text-lg font-bold">x<span id="mult-val">1</span></p>
-            </div>
-            <button onclick="buyUpgrade('click')" id="btn-upgrade-click" class="bg-blue-600 hover:bg-blue-500 disabled:opacity-30 text-white text-[10px] px-3 py-2 rounded-lg font-bold transition">
-                +0.1 (<span id="cost-click">1000</span>)
-            </button>
-        </div>
-
-        <div class="bg-slate-800/80 backdrop-blur-sm p-3 rounded-xl border border-slate-700 flex justify-between items-center">
-            <div>
-                <p class="text-[10px] text-purple-400 font-bold uppercase">Auto-Revenu</p>
-                <p class="text-lg font-bold"><span id="auto-val">0</span>/s</p>
-            </div>
-            <button onclick="buyUpgrade('auto')" id="btn-upgrade-auto" class="bg-purple-600 hover:bg-purple-500 disabled:opacity-30 text-white text-[10px] px-3 py-2 rounded-lg font-bold transition">
-                +1/s (<span id="cost-auto">5000</span>)
-            </button>
-        </div>
+        <button onclick="buyUpgrade('click')" id="btn-click" class="w-full bg-slate-800/50 p-4 rounded-xl border border-blue-500/30 flex justify-between items-center disabled:opacity-30">
+            <div class="text-left text-xs font-bold"><p class="text-blue-400 text-[10px] uppercase">Clic Manuel</p><p>x<span id="next-click-val">0.2</span></p></div>
+            <span class="font-black"><span id="cost-click">200</span> 🪙</span>
+        </button>
+        <button onclick="buyUpgrade('auto')" id="btn-auto" class="w-full bg-slate-800/50 p-4 rounded-xl border border-purple-500/30 flex justify-between items-center disabled:opacity-30">
+            <div class="text-left text-xs font-bold"><p class="text-purple-400 text-[10px] uppercase">Auto-Revenu</p><p><span id="next-auto-val">1</span>/s</p></div>
+            <span class="font-black"><span id="cost-auto">5000</span> 🪙</span>
+        </button>
     </div>
 
-    <div class="w-full max-w-xs mb-4">
-        <div class="flex justify-between text-[10px] text-slate-500 mb-1 px-1">
-            <span>Objectif Revolut 10€</span>
-            <span id="progress-percent">0%</span>
-        </div>
-        <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-            <div id="progress-bar" class="bg-green-500 h-full w-0 transition-all duration-500"></div>
-        </div>
-        <button onclick="reset()" class="w-full text-center text-[9px] text-slate-600 mt-4 uppercase tracking-tighter">Réinitialiser les données</button>
+    <div class="w-full max-w-xs mb-4 flex justify-between text-[9px] text-slate-500 font-bold uppercase tracking-widest">
+        <button onclick="reset()" class="hover:text-red-500">Réinitialiser</button>
+        <span>Objectif 10€</span>
     </div>
 
     <script>
-        // --- DONNÉES ---
-        let score = parseFloat(localStorage.getItem('cc_score')) || 0;
-        let multiplier = parseFloat(localStorage.getItem('cc_mult')) || 1;
-        let autoIncome = parseFloat(localStorage.getItem('cc_auto')) || 0;
-        let costClick = parseFloat(localStorage.getItem('cc_cost_c')) || 1000;
-        let costAuto = parseFloat(localStorage.getItem('cc_cost_a')) || 5000;
-
+        let score = parseFloat(localStorage.getItem('v10_score')) || 0;
+        let multiplier = parseFloat(localStorage.getItem('v10_mult')) || 0.1;
+        let autoIncome = parseFloat(localStorage.getItem('v10_auto')) || 0;
+        let level = parseInt(localStorage.getItem('v10_level')) || 1;
+        let xp = parseFloat(localStorage.getItem('v10_xp')) || 0;
+        
+        let isFury = false;
+        let currentFuryTimer = 0;
         const rate = 0.0001;
 
-        // --- LOGIQUE CORE ---
         function updateUI() {
-            const euros = score * rate;
+            let nextClick = Math.round((multiplier + 0.1) * 10) / 10;
+            let costClick = Math.round(nextClick * 1000);
+            let nextAuto = autoIncome + 1;
+            let costAuto = Math.round(nextAuto * 5000);
+
             document.getElementById('balance').innerText = Math.floor(score).toLocaleString();
-            document.getElementById('euro').innerText = euros.toFixed(2);
-            
-            // Stats Boutique
-            document.getElementById('mult-val').innerText = multiplier.toFixed(1);
-            document.getElementById('auto-val').innerText = autoIncome.toFixed(0);
-            document.getElementById('cost-click').innerText = Math.floor(costClick);
-            document.getElementById('cost-auto').innerText = Math.floor(costAuto);
+            document.getElementById('euro').innerText = (score * rate).toFixed(2);
+            document.getElementById('next-click-val').innerText = nextClick.toFixed(1);
+            document.getElementById('cost-click').innerText = costClick;
+            document.getElementById('next-auto-val').innerText = nextAuto;
+            document.getElementById('cost-auto').innerText = costAuto;
+            document.getElementById('btn-click').disabled = (score < costClick);
+            document.getElementById('btn-auto').disabled = (score < costAuto);
 
-            // État des boutons
-            document.getElementById('btn-upgrade-click').disabled = (score < costClick);
-            document.getElementById('btn-upgrade-auto').disabled = (score < costAuto);
+            let xpNeeded = level * 100 * 1.2;
+            document.getElementById('lvl-display').innerText = level;
+            document.getElementById('xp-current').innerText = Math.floor(xp);
+            document.getElementById('xp-needed').innerText = Math.floor(xpNeeded);
+            document.getElementById('xp-bar').style.width = (xp / xpNeeded * 100) + "%";
 
-            // Progression
-            const progress = Math.min((euros / 10) * 100, 100);
-            document.getElementById('progress-bar').style.width = progress + "%";
-            document.getElementById('progress-percent').innerText = Math.floor(progress) + "%";
-
-            // Sauvegarde
-            localStorage.setItem('cc_score', score);
-            localStorage.setItem('cc_mult', multiplier);
-            localStorage.setItem('cc_auto', autoIncome);
-            localStorage.setItem('cc_cost_c', costClick);
-            localStorage.setItem('cc_cost_a', costAuto);
+            localStorage.setItem('v10_score', score);
+            localStorage.setItem('v10_mult', multiplier);
+            localStorage.setItem('v10_auto', autoIncome);
+            localStorage.setItem('v10_level', level);
+            localStorage.setItem('v10_xp', xp);
         }
 
         function mine(btn) {
-            score += multiplier;
-            btn.classList.remove('click-animation');
-            void btn.offsetWidth;
+            let gain = isFury ? multiplier * 10 : multiplier;
+            score += gain;
+            xp += (isFury ? 2 : 1);
+            if (xp >= (level * 100 * 1.2)) document.getElementById('reward-modal').classList.remove('hidden');
             btn.classList.add('click-animation');
-            if (navigator.vibrate) navigator.vibrate(10);
+            setTimeout(() => btn.classList.remove('click-animation'), 100);
+            if (navigator.vibrate) navigator.vibrate(isFury ? 30 : 10);
+            updateUI();
+        }
+
+        function activateFury() {
+            if (isFury) return;
+            isFury = true;
+            // FORMULE : 10 secondes de base + 1 seconde par niveau au-dessus du lvl 1
+            currentFuryTimer = 10 + (level - 1);
+            
+            document.getElementById('heart-bonus').classList.add('hidden');
+            document.getElementById('fury-timer').classList.remove('hidden');
+            document.getElementById('main-btn').classList.add('fury-mode');
+            
+            let countdown = setInterval(() => {
+                currentFuryTimer--;
+                document.getElementById('fury-timer').innerText = `FURIE: ${currentFuryTimer}s`;
+                if (currentFuryTimer <= 0) {
+                    clearInterval(countdown);
+                    isFury = false;
+                    document.getElementById('fury-timer').classList.add('hidden');
+                    document.getElementById('main-btn').classList.remove('fury-mode');
+                    setTimeout(() => { document.getElementById('heart-bonus').classList.remove('hidden'); }, 30000);
+                }
+            }, 1000);
+        }
+
+        function applyBonus(type) {
+            level++; xp = 0; score += (level * 500);
+            if (type === 'xp') xp = (level * 100 * 1.2) * 0.2;
+            else if (type === 'click') multiplier = Math.round((multiplier + 0.2) * 10) / 10;
+            else if (type === 'auto') autoIncome += 2;
+            document.getElementById('reward-modal').classList.add('hidden');
             updateUI();
         }
 
         function buyUpgrade(type) {
-            if (type === 'click' && score >= costClick) {
-                score -= costClick;
-                multiplier += 0.1;
-                costClick *= 1.6;
-            } else if (type === 'auto' && score >= costAuto) {
-                score -= costAuto;
-                autoIncome += 1;
-                costAuto *= 1.8;
+            if (type === 'click') {
+                let n = Math.round((multiplier + 0.1) * 10) / 10;
+                if (score >= n * 1000) { score -= n * 1000; multiplier = n; }
+            } else if (type === 'auto') {
+                let n = autoIncome + 1;
+                if (score >= n * 5000) { score -= n * 5000; autoIncome = n; }
             }
             updateUI();
         }
 
-        // Boucle de revenu passif (toutes les secondes)
         setInterval(() => {
             if (autoIncome > 0) {
                 score += autoIncome;
+                xp += (autoIncome * 0.1);
+                if (xp >= (level * 100 * 1.2) && document.getElementById('reward-modal').classList.contains('hidden')) {
+                    document.getElementById('reward-modal').classList.remove('hidden');
+                }
                 updateUI();
             }
         }, 1000);
 
-        function reset() {
-            if(confirm("Effacer définitivement ta progression ?")) {
-                localStorage.clear();
-                location.reload();
-            }
-        }
-
+        function reset() { if(confirm("Tout effacer ?")) { localStorage.clear(); location.reload(); } }
         updateUI();
     </script>
 </body>
