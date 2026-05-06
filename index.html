@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Click & Cash - Mastery</title>
+    <title>Click & Cash - Fixed Fury</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2563eb">
@@ -12,7 +12,7 @@
         .click-animation { animation: pulse 0.1s ease-in-out; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(0.95); } 100% { transform: scale(1); } }
         .fury-mode { animation: fury-glow 0.5s infinite alternate; border-color: #ef4444 !important; }
-        @keyframes fury-glow { from { box-shadow: 0 0 10px #ef4444; } to { box-shadow: 0 0 30px #f87171; } }
+        @keyframes fury-glow { from { box-shadow: 0 0 15px #ef4444; } to { box-shadow: 0 0 40px #f87171; } }
         .heart-pulse { animation: heart-beat 1s infinite; }
         @keyframes heart-beat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
         .hidden { display: none; }
@@ -22,8 +22,7 @@
 
     <div id="reward-modal" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-6 text-center">
         <div class="bg-slate-800 border-2 border-yellow-500 rounded-3xl p-6 w-full max-w-xs shadow-2xl">
-            <h2 class="text-2xl font-black text-yellow-500 mb-2">NIVEAU SUPÉRIEUR !</h2>
-            <p class="text-slate-300 text-sm mb-6">Choisis ton bonus :</p>
+            <h2 class="text-2xl font-black text-yellow-500 mb-2">LVL UP !</h2>
             <div class="space-y-3">
                 <button onclick="applyBonus('xp')" class="w-full bg-blue-600 p-3 rounded-xl font-bold text-sm">🚀 Boost XP (+20%)</button>
                 <button onclick="applyBonus('click')" class="w-full bg-green-600 p-3 rounded-xl font-bold text-sm">⚡ Force Clic (+0.2)</button>
@@ -33,10 +32,10 @@
     </div>
 
     <div class="w-full max-w-xs mt-4">
-        <div class="flex justify-between items-end mb-1">
-            <span class="text-2xl font-black text-blue-500">LVL <span id="lvl-display">1</span></span>
-            <span id="fury-timer" class="text-red-500 font-bold hidden uppercase text-xs animate-pulse">FURIE: 10s</span>
-            <span class="text-[10px] text-slate-400 font-bold uppercase">XP: <span id="xp-current">0</span> / <span id="xp-needed">120</span></span>
+        <div class="flex justify-between items-end mb-1 text-blue-500 font-black">
+            <span class="text-2xl">LVL <span id="lvl-display">1</span></span>
+            <span id="fury-timer" class="text-red-500 font-bold hidden uppercase text-xs animate-pulse tracking-tighter">FURIE: 100/sec</span>
+            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">XP: <span id="xp-current">0</span> / <span id="xp-needed">120</span></span>
         </div>
         <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden border border-slate-700">
             <div id="xp-bar" class="bg-blue-500 h-full w-0 transition-all duration-300"></div>
@@ -44,7 +43,7 @@
     </div>
 
     <div class="text-center">
-        <div id="balance" class="text-6xl font-black text-yellow-400 drop-shadow-md">0</div>
+        <div id="balance" class="text-6xl font-black text-yellow-400">0</div>
         <div class="flex items-center justify-center gap-1">
             <span class="text-2xl text-green-400 font-bold" id="euro">0.00</span>
             <span class="text-green-500 font-bold">€</span>
@@ -59,25 +58,25 @@
     <div class="w-full max-w-xs space-y-3">
         <button onclick="buyUpgrade('click')" id="btn-click" class="w-full bg-slate-800/50 p-4 rounded-xl border border-blue-500/30 flex justify-between items-center disabled:opacity-30">
             <div class="text-left text-xs font-bold"><p class="text-blue-400 text-[10px] uppercase">Clic Manuel</p><p>x<span id="next-click-val">0.2</span></p></div>
-            <span class="font-black"><span id="cost-click">200</span> 🪙</span>
+            <span class="font-black text-sm"><span id="cost-click">200</span> 🪙</span>
         </button>
         <button onclick="buyUpgrade('auto')" id="btn-auto" class="w-full bg-slate-800/50 p-4 rounded-xl border border-purple-500/30 flex justify-between items-center disabled:opacity-30">
             <div class="text-left text-xs font-bold"><p class="text-purple-400 text-[10px] uppercase">Auto-Revenu</p><p><span id="next-auto-val">1</span>/s</p></div>
-            <span class="font-black"><span id="cost-auto">5000</span> 🪙</span>
+            <span class="font-black text-sm"><span id="cost-auto">5000</span> 🪙</span>
         </button>
     </div>
 
     <div class="w-full max-w-xs mb-4 flex justify-between text-[9px] text-slate-500 font-bold uppercase tracking-widest">
-        <button onclick="reset()" class="hover:text-red-500">Réinitialiser</button>
-        <span>Objectif 10€</span>
+        <button onclick="reset()" class="hover:text-red-500">Reset Data</button>
+        <span>Objectif Revolut 10€</span>
     </div>
 
     <script>
-        let score = parseFloat(localStorage.getItem('v10_score')) || 0;
-        let multiplier = parseFloat(localStorage.getItem('v10_mult')) || 0.1;
-        let autoIncome = parseFloat(localStorage.getItem('v10_auto')) || 0;
-        let level = parseInt(localStorage.getItem('v10_level')) || 1;
-        let xp = parseFloat(localStorage.getItem('v10_xp')) || 0;
+        let score = parseFloat(localStorage.getItem('v12_score')) || 0;
+        let multiplier = parseFloat(localStorage.getItem('v12_mult')) || 0.1;
+        let autoIncome = parseFloat(localStorage.getItem('v12_auto')) || 0;
+        let level = parseInt(localStorage.getItem('v12_level')) || 1;
+        let xp = parseFloat(localStorage.getItem('v12_xp')) || 0;
         
         let isFury = false;
         let currentFuryTimer = 0;
@@ -104,28 +103,27 @@
             document.getElementById('xp-needed').innerText = Math.floor(xpNeeded);
             document.getElementById('xp-bar').style.width = (xp / xpNeeded * 100) + "%";
 
-            localStorage.setItem('v10_score', score);
-            localStorage.setItem('v10_mult', multiplier);
-            localStorage.setItem('v10_auto', autoIncome);
-            localStorage.setItem('v10_level', level);
-            localStorage.setItem('v10_xp', xp);
+            localStorage.setItem('v12_score', score);
+            localStorage.setItem('v12_mult', multiplier);
+            localStorage.setItem('v12_auto', autoIncome);
+            localStorage.setItem('v12_level', level);
+            localStorage.setItem('v12_xp', xp);
         }
 
         function mine(btn) {
-            let gain = isFury ? multiplier * 10 : multiplier;
-            score += gain;
-            xp += (isFury ? 2 : 1);
+            // Le clic manuel reste normal (ou boosté x10 si tu préfères, ici il est normal)
+            score += multiplier;
+            xp += 1;
             if (xp >= (level * 100 * 1.2)) document.getElementById('reward-modal').classList.remove('hidden');
             btn.classList.add('click-animation');
             setTimeout(() => btn.classList.remove('click-animation'), 100);
-            if (navigator.vibrate) navigator.vibrate(isFury ? 30 : 10);
+            if (navigator.vibrate) navigator.vibrate(10);
             updateUI();
         }
 
         function activateFury() {
             if (isFury) return;
             isFury = true;
-            // FORMULE : 10 secondes de base + 1 seconde par niveau au-dessus du lvl 1
             currentFuryTimer = 10 + (level - 1);
             
             document.getElementById('heart-bonus').classList.add('hidden');
@@ -165,10 +163,12 @@
             updateUI();
         }
 
+        // BOUCLE AUTO-REVENU (Vitesse fixe à 100 si Furie active)
         setInterval(() => {
-            if (autoIncome > 0) {
-                score += autoIncome;
-                xp += (autoIncome * 0.1);
+            let gain = isFury ? 100 : autoIncome;
+            if (gain > 0) {
+                score += gain;
+                xp += (isFury ? 1 : gain * 0.1); 
                 if (xp >= (level * 100 * 1.2) && document.getElementById('reward-modal').classList.contains('hidden')) {
                     document.getElementById('reward-modal').classList.remove('hidden');
                 }
@@ -176,7 +176,7 @@
             }
         }, 1000);
 
-        function reset() { if(confirm("Tout effacer ?")) { localStorage.clear(); location.reload(); } }
+        function reset() { if(confirm("Effacer tout ?")) { localStorage.clear(); location.reload(); } }
         updateUI();
     </script>
 </body>
