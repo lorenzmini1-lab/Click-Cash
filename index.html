@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Click for Cash - Levelled Ads</title>
+    <title>Click for Cash - Fix Level</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { -webkit-tap-highlight-color: transparent; user-select: none; background-color: #0f172a; transition: background 0.5s; }
@@ -11,24 +11,36 @@
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(0.92); } 100% { transform: scale(1); } }
         .fury-mode { animation: fury-glow 0.5s infinite alternate; border-color: #ef4444 !important; }
         @keyframes fury-glow { from { box-shadow: 0 0 15px #ef4444; } to { box-shadow: 0 0 40px #f87171; } }
-        .boost-active { background-color: #1e3a8a !important; } /* Couleur spéciale pendant le boost vidéo */
+        .boost-active { background-color: #1e3a8a !important; }
         .hidden { display: none; }
     </style>
 </head>
 <body id="main-body" class="text-white flex flex-col items-center justify-between h-screen p-4 font-sans overflow-hidden">
 
+    <div id="reward-modal" class="hidden fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-6 text-center">
+        <div class="bg-slate-800 border-2 border-yellow-500 rounded-3xl p-6 w-full max-w-xs shadow-2xl">
+            <h2 class="text-2xl font-black text-yellow-500 mb-2">LVL UP !</h2>
+            <p class="text-xs text-slate-400 mb-4 font-bold">CHOISIS TON CADEAU :</p>
+            <div class="space-y-3">
+                <button onclick="applyBonus('xp')" class="w-full bg-blue-600 p-3 rounded-xl font-bold text-sm">🚀 BOOST XP (+20%)</button>
+                <button onclick="applyBonus('click')" class="w-full bg-green-600 p-3 rounded-xl font-bold text-sm">⚡ FORCE CLIC (+0.2)</button>
+                <button onclick="applyBonus('auto')" class="w-full bg-purple-600 p-3 rounded-xl font-bold text-sm">🤖 AUTO-REVENU (+2/s)</button>
+            </div>
+        </div>
+    </div>
+
     <div class="w-full flex justify-between items-center p-2">
         <div class="flex flex-col">
-            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-blue-500">NIVEAU <span id="lvl-display">1</span></span>
+            <span class="text-[10px] text-blue-500 font-bold uppercase tracking-widest">NIVEAU <span id="lvl-display">1</span></span>
             <div class="w-32 bg-slate-800 h-1.5 rounded-full overflow-hidden border border-slate-700 mt-1">
                 <div id="xp-bar" class="bg-blue-500 h-full w-0 transition-all duration-300"></div>
             </div>
         </div>
-        <button class="bg-green-600 px-4 py-2 rounded-full font-black text-xs shadow-lg">RETRAIT 💳</button>
+        <button onclick="alert('Retrait à 10.00€')" class="bg-green-600 px-4 py-2 rounded-full font-black text-xs shadow-lg">RETRAIT 💳</button>
     </div>
 
     <div class="text-center">
-        <div id="balance" class="text-7xl font-black text-yellow-400 drop-shadow-2xl">0</div>
+        <div id="balance" class="text-7xl font-black text-yellow-400">0</div>
         <div class="text-3xl font-bold text-green-400" id="euro">0.00€</div>
         <div id="goal-percent" class="text-[10px] font-bold text-slate-500 mt-1">OBJECTIF 10€: 0%</div>
     </div>
@@ -36,9 +48,8 @@
     <div class="w-full max-w-xs text-center">
         <button onclick="startVideoAd()" id="video-btn" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 p-4 rounded-2xl font-black text-sm shadow-xl border-2 border-indigo-400 active:scale-95 transition-all">
             🎬 VIDÉO BOOST <span id="boost-preview" class="text-yellow-300 ml-1">x6</span>
-            <p class="text-[9px] opacity-70 font-normal uppercase">Bonus indexé sur ton niveau</p>
         </button>
-        <p id="boost-timer" class="text-xs font-black text-blue-400 mt-2 hidden animate-pulse">BOOST ACTIF : 30s</p>
+        <p id="boost-timer" class="text-xs font-black text-blue-400 mt-2 hidden animate-pulse">BOOST ACTIF !</p>
     </div>
 
     <div class="relative">
@@ -48,7 +59,7 @@
 
     <div class="w-full max-w-xs grid grid-cols-2 gap-3 mb-4">
         <button onclick="buyUpgrade('click')" id="btn-click" class="bg-slate-800/80 p-3 rounded-2xl border border-blue-500/30 disabled:opacity-30">
-            <p class="text-[9px] text-blue-400 font-bold uppercase">Clic</p>
+            <p class="text-[9px] text-blue-400 font-bold uppercase">Force</p>
             <p class="font-black text-sm">x<span id="next-click-val">0.2</span></p>
             <p class="text-[10px] text-yellow-500 font-bold"><span id="cost-click">200</span> 🪙</p>
         </button>
@@ -60,15 +71,14 @@
     </div>
 
     <script>
-        let score = parseFloat(localStorage.getItem('v15_score')) || 0;
-        let multiplier = parseFloat(localStorage.getItem('v15_mult')) || 0.1;
-        let autoIncome = parseFloat(localStorage.getItem('v15_auto')) || 0;
-        let level = parseInt(localStorage.getItem('v15_level')) || 1;
-        let xp = parseFloat(localStorage.getItem('v15_xp')) || 0;
+        let score = parseFloat(localStorage.getItem('v16_score')) || 0;
+        let multiplier = parseFloat(localStorage.getItem('v16_mult')) || 0.1;
+        let autoIncome = parseFloat(localStorage.getItem('v16_auto')) || 0;
+        let level = parseInt(localStorage.getItem('v16_level')) || 1;
+        let xp = parseFloat(localStorage.getItem('v16_xp')) || 0;
         
         let isFury = false;
         let isVideoBoost = false;
-        let currentMultiplier = multiplier;
         const rate = 0.0001; 
 
         function updateUI() {
@@ -96,29 +106,42 @@
             document.getElementById('lvl-display').innerText = level;
             document.getElementById('xp-bar').style.width = (xp / xpNeeded * 100) + "%";
 
-            localStorage.setItem('v15_score', score);
-            localStorage.setItem('v15_mult', multiplier);
-            localStorage.setItem('v15_auto', autoIncome);
-            localStorage.setItem('v15_level', level);
-            localStorage.setItem('v15_xp', xp);
+            // Vérification automatique du Level Up
+            if (xp >= xpNeeded && document.getElementById('reward-modal').classList.contains('hidden')) {
+                document.getElementById('reward-modal').classList.remove('hidden');
+            }
+
+            localStorage.setItem('v16_score', score);
+            localStorage.setItem('v16_mult', multiplier);
+            localStorage.setItem('v16_auto', autoIncome);
+            localStorage.setItem('v16_level', level);
+            localStorage.setItem('v16_xp', xp);
         }
 
         function mine(btn) {
-            // Le gain utilise le multiplicateur boosté si la vidéo a été vue
             let activeMult = isVideoBoost ? (multiplier * (5 + level)) : multiplier;
             score += activeMult;
             xp += (isVideoBoost ? 2 : 1);
-            if (xp >= (level * 120)) document.getElementById('reward-modal').classList.remove('hidden');
             btn.classList.add('click-animation');
             setTimeout(() => btn.classList.remove('click-animation'), 100);
             updateUI();
         }
 
+        function applyBonus(type) {
+            level++;
+            xp = 0;
+            score += (level * 500); // Bonus de pièces à chaque niveau
+            if (type === 'xp') xp = (level * 120) * 0.2;
+            else if (type === 'click') multiplier = Math.round((multiplier + 0.2) * 10) / 10;
+            else if (type === 'auto') autoIncome += 2;
+            
+            document.getElementById('reward-modal').classList.add('hidden');
+            updateUI();
+        }
+
         function startVideoAd() {
             alert("Chargement de la publicité vidéo...");
-            setTimeout(() => {
-                applyVideoReward();
-            }, 3000); // On simule 3s de pub
+            setTimeout(() => applyVideoReward(), 3000);
         }
 
         function applyVideoReward() {
@@ -146,28 +169,27 @@
             isFury = true;
             let timer = 10 + (level - 1);
             document.getElementById('main-btn').classList.add('fury-mode');
+            document.getElementById('heart-bonus').classList.add('hidden');
             setTimeout(() => {
                 isFury = false;
                 document.getElementById('main-btn').classList.remove('fury-mode');
+                setTimeout(() => document.getElementById('heart-bonus').classList.remove('hidden'), 30000);
             }, timer * 1000);
         }
 
         function buyUpgrade(type) {
             let n = (type === 'click') ? Math.round((multiplier + 0.1) * 10) / 10 : autoIncome + 1;
             let cost = (type === 'click') ? n * 1000 : n * 5000;
-            if (score >= cost) { 
-                score -= cost; 
-                if (type === 'click') multiplier = n; else autoIncome = n; 
-            }
+            if (score >= cost) { score -= cost; if (type === 'click') multiplier = n; else autoIncome = n; }
             updateUI();
         }
 
         setInterval(() => {
             let gain = isFury ? 100 : autoIncome;
             if (gain > 0) {
-                // L'autoclicker profite aussi du boost vidéo !
                 let finalGain = isVideoBoost ? (gain * 2) : gain; 
                 score += finalGain;
+                xp += (finalGain * 0.1);
                 updateUI();
             }
         }, 1000);
