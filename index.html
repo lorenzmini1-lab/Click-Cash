@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Click & Cash - Fixed Fury</title>
+    <title>Click & Cash - Goal 10€</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2563eb">
@@ -31,22 +31,32 @@
         </div>
     </div>
 
-    <div class="w-full max-w-xs mt-4">
+    <div class="w-full max-w-xs mt-2">
         <div class="flex justify-between items-end mb-1 text-blue-500 font-black">
             <span class="text-2xl">LVL <span id="lvl-display">1</span></span>
-            <span id="fury-timer" class="text-red-500 font-bold hidden uppercase text-xs animate-pulse tracking-tighter">FURIE: 100/sec</span>
+            <span id="fury-timer" class="text-red-500 font-bold hidden uppercase text-[10px] animate-pulse">FURIE: 100/s</span>
             <span class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">XP: <span id="xp-current">0</span> / <span id="xp-needed">120</span></span>
         </div>
-        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden border border-slate-700">
+        <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden border border-slate-700">
             <div id="xp-bar" class="bg-blue-500 h-full w-0 transition-all duration-300"></div>
         </div>
     </div>
 
-    <div class="text-center">
+    <div class="text-center w-full max-w-xs">
         <div id="balance" class="text-6xl font-black text-yellow-400">0</div>
-        <div class="flex items-center justify-center gap-1">
+        <div class="flex items-center justify-center gap-1 mb-2">
             <span class="text-2xl text-green-400 font-bold" id="euro">0.00</span>
             <span class="text-green-500 font-bold">€</span>
+        </div>
+        
+        <div class="px-4">
+            <div class="flex justify-between text-[10px] font-black uppercase text-slate-500 mb-1">
+                <span>Objectif 10€</span>
+                <span id="goal-percent" class="text-green-400">0%</span>
+            </div>
+            <div class="w-full bg-slate-800 h-3 rounded-full border border-slate-700 overflow-hidden">
+                <div id="goal-bar" class="bg-gradient-to-r from-green-600 to-green-400 h-full w-0 transition-all duration-500"></div>
+            </div>
         </div>
     </div>
 
@@ -66,21 +76,21 @@
         </button>
     </div>
 
-    <div class="w-full max-w-xs mb-4 flex justify-between text-[9px] text-slate-500 font-bold uppercase tracking-widest">
-        <button onclick="reset()" class="hover:text-red-500">Reset Data</button>
-        <span>Objectif Revolut 10€</span>
+    <div class="w-full max-w-xs mb-2 flex justify-center text-[9px] text-slate-600 font-bold uppercase tracking-widest">
+        <button onclick="reset()" class="hover:text-red-500">Réinitialiser les données</button>
     </div>
 
     <script>
-        let score = parseFloat(localStorage.getItem('v12_score')) || 0;
-        let multiplier = parseFloat(localStorage.getItem('v12_mult')) || 0.1;
-        let autoIncome = parseFloat(localStorage.getItem('v12_auto')) || 0;
-        let level = parseInt(localStorage.getItem('v12_level')) || 1;
-        let xp = parseFloat(localStorage.getItem('v12_xp')) || 0;
+        let score = parseFloat(localStorage.getItem('v13_score')) || 0;
+        let multiplier = parseFloat(localStorage.getItem('v13_mult')) || 0.1;
+        let autoIncome = parseFloat(localStorage.getItem('v13_auto')) || 0;
+        let level = parseInt(localStorage.getItem('v13_level')) || 1;
+        let xp = parseFloat(localStorage.getItem('v13_xp')) || 0;
         
         let isFury = false;
         let currentFuryTimer = 0;
-        const rate = 0.0001;
+        const rate = 0.0001; // 10 000 pièces = 1€
+        const goalAmount = 10; // Objectif 10€
 
         function updateUI() {
             let nextClick = Math.round((multiplier + 0.1) * 10) / 10;
@@ -88,8 +98,18 @@
             let nextAuto = autoIncome + 1;
             let costAuto = Math.round(nextAuto * 5000);
 
+            // Calcul argent et pourcentage
+            let currentEuro = score * rate;
+            let percent = (currentEuro / goalAmount) * 100;
+            if (percent > 100) percent = 100;
+
             document.getElementById('balance').innerText = Math.floor(score).toLocaleString();
-            document.getElementById('euro').innerText = (score * rate).toFixed(2);
+            document.getElementById('euro').innerText = currentEuro.toFixed(2);
+            
+            // Mise à jour de la barre d'objectif
+            document.getElementById('goal-percent').innerText = percent.toFixed(1) + "%";
+            document.getElementById('goal-bar').style.width = percent + "%";
+
             document.getElementById('next-click-val').innerText = nextClick.toFixed(1);
             document.getElementById('cost-click').innerText = costClick;
             document.getElementById('next-auto-val').innerText = nextAuto;
@@ -103,15 +123,14 @@
             document.getElementById('xp-needed').innerText = Math.floor(xpNeeded);
             document.getElementById('xp-bar').style.width = (xp / xpNeeded * 100) + "%";
 
-            localStorage.setItem('v12_score', score);
-            localStorage.setItem('v12_mult', multiplier);
-            localStorage.setItem('v12_auto', autoIncome);
-            localStorage.setItem('v12_level', level);
-            localStorage.setItem('v12_xp', xp);
+            localStorage.setItem('v13_score', score);
+            localStorage.setItem('v13_mult', multiplier);
+            localStorage.setItem('v13_auto', autoIncome);
+            localStorage.setItem('v13_level', level);
+            localStorage.setItem('v13_xp', xp);
         }
 
         function mine(btn) {
-            // Le clic manuel reste normal (ou boosté x10 si tu préfères, ici il est normal)
             score += multiplier;
             xp += 1;
             if (xp >= (level * 100 * 1.2)) document.getElementById('reward-modal').classList.remove('hidden');
@@ -125,7 +144,6 @@
             if (isFury) return;
             isFury = true;
             currentFuryTimer = 10 + (level - 1);
-            
             document.getElementById('heart-bonus').classList.add('hidden');
             document.getElementById('fury-timer').classList.remove('hidden');
             document.getElementById('main-btn').classList.add('fury-mode');
@@ -163,7 +181,6 @@
             updateUI();
         }
 
-        // BOUCLE AUTO-REVENU (Vitesse fixe à 100 si Furie active)
         setInterval(() => {
             let gain = isFury ? 100 : autoIncome;
             if (gain > 0) {
@@ -176,7 +193,7 @@
             }
         }, 1000);
 
-        function reset() { if(confirm("Effacer tout ?")) { localStorage.clear(); location.reload(); } }
+        function reset() { if(confirm("Effacer toute la progression ?")) { localStorage.clear(); location.reload(); } }
         updateUI();
     </script>
 </body>
